@@ -1,0 +1,14 @@
+Make swap buffer non blocking
+
+diff --git a/gst-libs/gst/gl/wayland/gstglwindow_wayland_egl.h b/gst-libs/gst/gl/wayland/gstglwindow_wayland_egl.h
+index 0212744b7..cbb7db838 100644
+--- a/gst-libs/gst/gl/wayland/gstglwindow_wayland_egl.h
++++ b/gst-libs/gst/gl/wayland/gstglwindow_wayland_egl.h
+@@ -84,6 +84,7 @@ struct window {
+   int preferred_width, preferred_height;
+   int window_x, window_y;
+   GstVideoRectangle render_rect;
++  char can_draw; 
+ };
+ 
+ struct _GstGLWindowWaylandEGL {

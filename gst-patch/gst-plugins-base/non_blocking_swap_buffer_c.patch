@@ -1,0 +1,69 @@
+Make swap buffer non blocking
+
+diff --git a/gst-libs/gst/gl/wayland/gstglwindow_wayland_egl.c b/gst-libs/gst/gl/wayland/gstglwindow_wayland_egl.c
+index bb8be2756..c7c5e6530 100644
+--- a/gst-libs/gst/gl/wayland/gstglwindow_wayland_egl.c
++++ b/gst-libs/gst/gl/wayland/gstglwindow_wayland_egl.c
+@@ -28,7 +28,8 @@
+ #include <locale.h>
+ #include <sys/mman.h>
+ #include <unistd.h>
+-
++#include <EGL/egl.h>
++#include <gst/gl/egl/gstglcontext_egl.h>
+ #include "wayland_event_source.h"
+ 
+ #include "../gstgl_fwd.h"
+@@ -333,6 +334,20 @@ create_wl_shell_surface (GstGLWindowWaylandEGL * window_egl)
+ 
+   window_egl->window.wl_shell_surface = wl_shell_surface;
+ }
++static void frame_handle_done(void *data, struct wl_callback *callback,uint32_t time);
++static const struct wl_callback_listener frame_listener = {
++  .done = frame_handle_done,
++};
++static void frame_handle_done(void *data, struct wl_callback *callback,
++		uint32_t time) 
++{
++  GstGLWindowWaylandEGL * window_egl = data;
++  wl_callback_destroy(callback);
++  /* Request another frame */
++  callback = wl_surface_frame(window_egl->window.surface);
++  wl_callback_add_listener(callback, &frame_listener, window_egl);
++  window_egl->window.can_draw = 1;
++}
+ 
+ static void
+ create_surfaces (GstGLWindowWaylandEGL * window_egl)
+@@ -342,6 +357,9 @@ create_surfaces (GstGLWindowWaylandEGL * window_egl)
+   if (!window_egl->window.surface) {
+     window_egl->window.surface =
+         wl_compositor_create_surface (window_egl->display.compositor);
++    struct wl_callback *callback = wl_surface_frame(window_egl->window.surface);
++    wl_callback_add_listener(callback, &frame_listener, window_egl);
++    window_egl->window.can_draw = 1;
+   }
+ 
+   if (window_egl->window.foreign_surface) {
+@@ -680,11 +698,16 @@ draw_cb (gpointer data)
+     gst_gl_window_get_surface_dimensions (window, &width, &height);
+     gst_gl_window_resize (window, width, height);
+   }
+-
+-  if (window->draw)
+-    window->draw (window->draw_data);
+-
+-  gst_gl_context_swap_buffers (context);
++  if (window_egl->window.can_draw)
++  {
++    window_egl->window.can_draw = 0;
++    if (window->draw)
++    {
++      window->draw (window->draw_data);
++      eglSwapInterval(GST_GL_CONTEXT_EGL (context)->egl_display, 0);
++      gst_gl_context_swap_buffers (context);
++    }
++  }
+ 
+   if (window_egl->window.subsurface)
+     wl_subsurface_set_desync (window_egl->window.subsurface);

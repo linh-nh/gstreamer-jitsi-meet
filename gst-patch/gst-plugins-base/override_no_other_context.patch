@@ -1,0 +1,19 @@
+glimagesink cannot work with 2 windows in wayland yet
+
+diff --git a/gst-libs/gst/gl/gstglcontext.c b/gst-libs/gst/gl/gstglcontext.c
+index 06215d840..c46dbf8f6 100644
+--- a/gst-libs/gst/gl/gstglcontext.c
++++ b/gst-libs/gst/gl/gstglcontext.c
+@@ -1223,7 +1223,11 @@ gst_gl_context_create_thread (GstGLContext * context)
+   GST_DEBUG_OBJECT (context, "Creating thread");
+ 
+   error = context->priv->error;
+-  other_context = g_weak_ref_get (&context->priv->other_context_ref);
++  const char* s = getenv("OVERRIDE_NO_OTHER_CONTEXT");
++  if (s)
++    other_context = NULL;
++  else
++    other_context = g_weak_ref_get (&context->priv->other_context_ref);
+ 
+   context_class = GST_GL_CONTEXT_GET_CLASS (context);
+   window_class = GST_GL_WINDOW_GET_CLASS (context->window);

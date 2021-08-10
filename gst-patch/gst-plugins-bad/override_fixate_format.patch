@@ -1,0 +1,31 @@
+Despite my effort to add video/x-raw,format=NV12 in pipeline string, it always fixate output format of v4l2slvp8dec to something else and it doesn't work with glimagesink, so I force it here
+
+diff --git a/sys/v4l2codecs/gstv4l2decoder.c b/sys/v4l2codecs/gstv4l2decoder.c
+index 266b31daa..a2ab2834c 100644
+--- a/sys/v4l2codecs/gstv4l2decoder.c
++++ b/sys/v4l2codecs/gstv4l2decoder.c
+@@ -435,10 +435,20 @@ gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstCaps * caps,
+ 
+   caps = gst_caps_make_writable (caps);
+   str = gst_caps_get_structure (caps, 0);
+-  gst_structure_fixate_field (str, "format");
+-
+-  format_str = gst_structure_get_string (str, "format");
+-  format = gst_video_format_from_string (format_str);
++  const char* s = getenv("OVERRIDE_FIXATE_FORMAT");
++  if (s)
++  {
++      GST_DEBUG_OBJECT (self, "OVERRIDE_FIXATE_FORMAT: %s", s);
++      format = gst_video_format_from_string (s);
++      format_str = s;
++  }
++  else
++  {
++      gst_structure_fixate_field (str, "format");
++      format_str = gst_structure_get_string (str, "format");
++      GST_DEBUG_OBJECT (self, "fixate to: %s ", format_str);
++      format = gst_video_format_from_string (format_str);
++  }
+ 
+   if (gst_v4l2_format_from_video_format (format, &pix_fmt) &&
+       pix_fmt != fmt.fmt.pix_mp.pixelformat) {
