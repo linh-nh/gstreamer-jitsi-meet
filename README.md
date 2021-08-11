@@ -1,5 +1,5 @@
 # gstreamer-jitsi-meet
-This application makes a webrtc video call with jitsi meet signaling. Other end can be any jitsi meet app or web app. This program doesn't support a room with 3 people.
+This application makes a webrtc video call with jitsi meet signaling. Other end can be any jitsi meet app or web app. It doesn't support a room with more than 2 people.
 
 # How to build
 - Apply patch in gst-patch to respective gstreamer repo and rebuild, reinstall changed .so file
