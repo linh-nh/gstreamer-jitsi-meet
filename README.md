@@ -17,3 +17,9 @@ This application makes a webrtc video call with jitsi meet signaling. Other end 
 
 # Demo
 https://www.youtube.com/watch?v=AlmOvYJzIoI
+
+# State of this code
+- I changed my focus to other project and not working on this anymore, maybe I will comeback to it someday though.
+
+# Similar project
+- This one look well organized: https://github.com/avstack/gst-meet
